@@ -23,8 +23,8 @@ PrediHome là một ứng dụng web cho phép người dùng dự đoán giá n
 1. Clone repository:
 
 ```bash
-git clone https://github.com/.../predihome.git
-cd predihome
+git clone https://github.com/QuangLP2607/HM-KPDL
+cd HM-KPDL
 ```
 
 2. Cài đặt các thư viện cần thiết:
