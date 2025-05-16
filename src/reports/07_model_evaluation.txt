@@ -1,0 +1,43 @@
+BÁO CÁO ĐÁNH GIÁ MÔ HÌNH
+=====================
+
+Thời gian: 2025-05-16 18:47:21
+
+Mô hình: Linear Regression
+-------------------
+RMSE: 3.38
+R2 Score: 0.517
+MAE: 2.50
+MAPE: 29.75%
+
+Mô hình: Random Forest
+-------------------
+RMSE: 2.34
+R2 Score: 0.769
+MAE: 1.54
+MAPE: 18.37%
+
+Mô hình: XGBoost
+-------------------
+RMSE: 2.20
+R2 Score: 0.796
+MAE: 1.51
+MAPE: 18.03%
+
+Mô hình: LightGBM
+-------------------
+RMSE: 2.26
+R2 Score: 0.785
+MAE: 1.54
+MAPE: 18.34%
+
+Mô hình: KNN
+-------------------
+RMSE: 2.93
+R2 Score: 0.636
+MAE: 1.95
+MAPE: 23.25%
+
+
+Mô hình tốt nhất: XGBoost
+R2 Score: 0.796
