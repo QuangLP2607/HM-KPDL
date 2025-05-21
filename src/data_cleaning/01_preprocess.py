@@ -13,14 +13,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- Loại bỏ cột có tỷ lệ thiếu dữ liệu quá cao ---
-def drop_missing_columns(df, threshold=0.5):
-    missing_ratio = df.isnull().mean()
-    columns_to_drop = missing_ratio[missing_ratio > threshold].index
-    return df.drop(columns=columns_to_drop)
-
-# --- Chuẩn hóa giá trị số từ chuỗi ---
 def normalize_number(value):
+    """Chuẩn hóa giá trị số từ chuỗi"""
     if pd.isnull(value):
         return np.nan
     value = str(value)
@@ -31,24 +25,8 @@ def normalize_number(value):
     except ValueError:
         return np.nan
 
-def normalize_integer(value):
-    if pd.isnull(value):
-        return pd.NA
-    value = re.sub(r'[^\d]', '', str(value))
-    try:
-        return int(value)
-    except ValueError:
-        return pd.NA
-
-def standardize_numerical_data(df, column, as_int=False):
-    if as_int:
-        df[column] = df[column].apply(normalize_integer)
-    else:
-        df[column] = df[column].apply(normalize_number)
-    return df
-
-# --- Chuyển đổi và chuẩn hóa mức giá ---
 def convert_price(value, area=None):
+    """Chuyển đổi và chuẩn hóa mức giá"""
     value = str(value).lower().replace('.', '').replace(',', '.')
     if any(unit in value for unit in ['thỏa thuận', 'nghìn', 'tỷ/m²', 'triệu/tháng']):
         return np.nan
@@ -70,56 +48,19 @@ def convert_price(value, area=None):
             return np.nan
     return np.nan
 
-def standardize_price(df, price_column, area_column=None):
-    df[price_column] = df.apply(
-        lambda row: convert_price(row[price_column], row[area_column] if area_column else None),
-        axis=1
-    )
-    return df.dropna(subset=[price_column])
+column_rename_map = {
+    'Diện tích': 'Area',
+    'Số phòng ngủ': 'Bedrooms',
+    'Số phòng tắm, vệ sinh': 'Bathrooms',
+    'Số tầng': 'Floors',
+    'Đường vào': 'AccessWidth',
+    'Mặt tiền': 'FacadeWidth',
+    'Mức giá': 'Price',
+    'Địa điểm': 'Location',
+    'Pháp lý': 'LegalStatus',
+    'Nội thất': 'Furnishing'
+}
 
-# --- Tách địa điểm thành District và Province ---
-def split_location(df, location_column):
-    location_split = df[location_column].str.split(',', expand=True, n=1)
-    df = df.drop(columns=[location_column])
-    df = pd.concat([df, location_split.rename(columns={0:'District', 1:'Province'})], axis=1)
-    return df
-
-# --- Chuẩn hóa cột Pháp lý ---
-def standardize_legal_status(df, legal_column):
-    def group_legal_status(value):
-        value = str(value).lower()
-        if 'sổ' in value and 'chờ' not in value:
-            return 'yes'
-        if any(kw in value for kw in ['sh', 'sd', 'đủ']):
-            return 'yes'
-        return 'no'
-    df[legal_column] = df[legal_column].apply(group_legal_status)
-    return df
-
-# --- Chuẩn hóa cột Nội thất ---
-def standardize_furnishing(df, furnishing_column):
-    def group_furnishing(value):
-        if pd.isna(value) or str(value).strip() == '':
-            return 'no'
-        value_lower = str(value).lower()
-        if 'no' in value_lower:
-            return 'no'
-        return 'yes'
-    
-    df[furnishing_column] = df[furnishing_column].apply(group_furnishing)
-    return df
-
-def validate_data(df):
-    """Kiểm tra tính hợp lý của dữ liệu sau xử lý"""
-    # Kiểm tra giá trị âm
-    numeric_cols = ['Area', 'Price', 'AccessWidth', 'FacadeWidth']
-    for col in numeric_cols:
-        if col in df.columns:
-            neg_values = (df[col] < 0).sum()
-            if neg_values > 0:
-                print(f"Warning: Có {neg_values} giá trị âm trong cột {col}")
-
-# --- Hàm xử lý tổng thể ---
 def preprocess_data(df):
     """
     Tiền xử lý dữ liệu bất động sản.
@@ -128,74 +69,43 @@ def preprocess_data(df):
         df (pd.DataFrame): DataFrame chứa dữ liệu thô
         
     Returns:
-        pd.DataFrame: DataFrame đã được xử lý với các cột:
-            - Area: Diện tích (m²)
-            - Bedrooms: Số phòng ngủ
-            - Bathrooms: Số phòng tắm
-            - Floors: Số tầng
-            - AccessWidth: Đường vào (m)
-            - FacadeWidth: Mặt tiền (m)
-            - Price: Giá (tỷ đồng)
-            - District: Quận/Huyện
-            - Province: Tỉnh/Thành phố
-            - LegalStatus: Trạng thái pháp lý
-            - Furnishing: Trạng thái nội thất
+        pd.DataFrame: DataFrame đã được xử lý
     """
     initial_rows = len(df)
-    # Loại bỏ các dòng có hơn 3 giá trị thiếu
-    total_cols = len(df.columns)
-    df = df.dropna(thresh=total_cols - 3)
+    
+    # 1. Loại bỏ các cột không cần thiết
+    columns_to_drop = ['Tiêu đề', 'URL', 'Ngày đăng', 'Hướng nhà', 'Hướng ban công']
+    df = df.drop(columns=columns_to_drop)
 
-    # Đổi tên cột sang tiếng Anh
-    column_rename_map = {
-        'Diện tích': 'Area',
-        'Số phòng ngủ': 'Bedrooms',
-        'Số phòng tắm, vệ sinh': 'Bathrooms',
-        'Số tầng': 'Floors',
-        'Đường vào': 'AccessWidth',
-        'Mặt tiền': 'FacadeWidth',
-        'Mức giá': 'Price',
-        'Địa điểm': 'Location',
-        'Pháp lý': 'LegalStatus',
-        'Nội thất': 'Furnishing',
-        'Tiêu đề': 'Title',
-        'URL': 'URL',
-        'Ngày đăng': 'PostedDate'
-    }
+    # 2. Loại bỏ các dòng có nhiều giá trị thiếu
+    df = df.dropna(thresh=len(df.columns) - 3)
+
+    # 3. Đổi tên cột sang tiếng Anh
     df = df.rename(columns=column_rename_map)
 
-    df = drop_missing_columns(df)
+    # 4. Chuẩn hóa các cột số
+    numeric_columns = ['Area', 'Bedrooms', 'Bathrooms', 'Floors', 'AccessWidth', 'FacadeWidth']
+    for col in numeric_columns: df[col] = df[col].apply(normalize_number)
 
-    # Chuẩn hóa các cột số thực
-    float_columns = ['Area', 'AccessWidth', 'FacadeWidth']
-    for col in float_columns:
-        if col in df.columns:
-            df = standardize_numerical_data(df, col)
+         
+    # 5. Chuẩn hóa mức giá
+    df['Price'] = df.apply(lambda row: convert_price(row['Price'], row['Area']), axis=1)
+    df = df.dropna(subset=['Price'])
 
-    # Chuẩn hóa các cột số nguyên
-    integer_columns = ['Bedrooms', 'Bathrooms', 'Floors']
-    for col in integer_columns:
-        if col in df.columns:
-            df = standardize_numerical_data(df, col, as_int=True)
+    # 6. Tách địa điểm
+    location_split = df['Location'].str.split(',', expand=True, n=1)
+    df = df.drop(columns=['Location'])
+    df = pd.concat([df, location_split.rename(columns={0:'District', 1:'Province'})], axis=1)
 
-    # Chuẩn hóa mức giá
-    df = standardize_price(df, 'Price', area_column='Area')
+    # 7. Chuẩn hóa các cột phân loại
+    df['LegalStatus'] = df['LegalStatus'].apply(lambda x: 'yes' if 'sổ' in str(x).lower() and 'chờ' not in str(x).lower() else 'no')
+    df['Furnishing'] = df['Furnishing'].apply(lambda x: 'no' if pd.isna(x) or str(x).strip() == '' or 'no' in str(x).lower() else 'yes')
 
-    # Tách địa điểm
-    df = split_location(df, 'Location')
-
-    # Chuẩn hóa các cột phân loại
-    df = standardize_legal_status(df, 'LegalStatus')
-    df = standardize_furnishing(df, 'Furnishing')
-
-    # Bỏ các cột không cần thiết
-    df = df.drop(columns=['Title', 'URL', 'PostedDate'])
-
-    # Tự động chuyển các kiểu dữ liệu phù hợp
+    # 8. Chuyển đổi kiểu dữ liệu
     df = df.convert_dtypes()
 
     final_rows = len(df)
-    print(f"Số dòng dữ liệu: {initial_rows} -> {final_rows} (giảm {initial_rows - final_rows} dòng)")
+    logger.info(f"Số dòng dữ liệu: {initial_rows} -> {final_rows} (giảm {initial_rows - final_rows} dòng)")
 
     return df
 
@@ -279,7 +189,7 @@ def generate_preprocessing_report(df_before: pd.DataFrame, df_after: pd.DataFram
         # 6. Các vấn đề đã phát hiện và xử lý
         f.write("\n6. CÁC VẤN ĐỀ ĐÃ PHÁT HIỆN VÀ XỬ LÝ\n")
         f.write("-------------------\n")
-        f.write("- Loại bỏ các cột có tỷ lệ dữ liệu thiếu > 50%\n")
+        f.write("- Loại bỏ các cột không cần thiết\n")
         f.write("- Chuẩn hóa các giá trị số từ chuỗi\n")
         f.write("- Chuyển đổi và chuẩn hóa mức giá về đơn vị tỷ đồng\n")
         f.write("- Tách địa điểm thành District và Province\n")
@@ -302,7 +212,7 @@ def main():
         
         # Lưu DataFrame gốc để so sánh
         df_before = df.copy()
-        
+        df_before = df.rename(columns=column_rename_map)
         # Tiền xử lý dữ liệu
         logger.info("Đang tiền xử lý dữ liệu...")
         df_cleaned = preprocess_data(df)
