@@ -43,14 +43,17 @@ Chạy các script theo thứ tự để xử lý dữ liệu:
 # Tiền xử lý dữ liệu
 python src/data_cleaning/01_preprocess.py
 
-# Xử lý ngoại lai
-python src/data_cleaning/02_outlier_processing.py
+# Kỹ thuật đặc trưng
+python src/data_cleaning/02_feature_engineering.py
+
+# Chuẩn hóa phân phối
+python src/data_cleaning/03_distribution_normalization.py
 
 # Xử lý giá trị thiếu
-python src/data_cleaning/03_missing_value_processing.py
+python src/data_cleaning/04_missing_value_processing.py
 
-# Kỹ thuật đặc trưng
-python src/data_cleaning/04_feature_engineering.py
+# Xử lý ngoại lai
+python src/data_cleaning/05_outlier_processing.py
 ```
 
 ### 2. Huấn luyện mô hình
@@ -59,16 +62,16 @@ Chạy các script theo thứ tự để huấn luyện và đánh giá mô hìn
 
 ```bash
 # Mã hóa đặc trưng
-python src/model_training/05_feature_encoding.py
+python src/model_training/06_feature_encoding.py
 
-# Chuẩn bị dữ liệu
-python src/model_training/06_prepare_data.py
+# Chuẩn bị mô hình
+python src/model_training/07_model_preparation.py
 
 # Huấn luyện các mô hình
-python src/model_training/07_train_models.py
+python src/model_training/08_train_models.py
 
 # Đánh giá mô hình
-python src/model_training/08_model_evaluation.py
+python src/model_training/09_model_evaluation.py
 ```
 
 ### 3. Chạy ứng dụng
@@ -84,89 +87,56 @@ streamlit run src/app.py
 ## 📝 Lưu ý
 
 1. Đảm bảo đã cài đặt đầy đủ các thư viện cần thiết từ `requirements.txt`
-2. Các file dữ liệu cần được đặt đúng vị trí trong thư mục `data/`
-3. Các model đã huấn luyện sẽ được lưu trong thư mục `models/`
-4. Báo cáo đánh giá sẽ được lưu trong thư mục `reports/`
+2. Các file dữ liệu cần được đặt đúng vị trí trong thư mục `src/data/`
+3. Các model đã huấn luyện sẽ được lưu trong thư mục `src/models/`
+4. Báo cáo đánh giá sẽ được lưu trong thư mục `src/reports/`
 
 ## 📁 Cấu trúc dự án
 
 ```
-predihome/
+HM-KPDL/
 ├── src/
 │   ├── data_cleaning/
 │   │   ├── 01_preprocess.py
-│   │   ├── 02_outlier_processing.py
-│   │   ├── 03_missing_value_processing.py
-│   │   └── 04_feature_engineering.py
+│   │   ├── 02_feature_engineering.py
+│   │   ├── 03_distribution_normalization.py
+│   │   ├── 04_missing_value_processing.py
+│   │   └── 05_outlier_processing.py
 │   ├── model_training/
-│   │   ├── 05_feature_encoding.py
-│   │   ├── 06_prepare_data.py
-│   │   ├── 07_train_models.py
-│   │   └── 08_model_evaluation.py
+│   │   ├── 06_feature_encoding.py
+│   │   ├── 07_model_preparation.py
+│   │   ├── 08_train_models.py
+│   │   ├── 09_model_evaluation.py
+│   │   └── utils/
 │   ├── utils/
 │   │   └── load_data.py
+│   ├── notebooks/
+│   ├── reports/
+│   ├── models/
+│   ├── data/
+│   ├── crawls/
 │   └── app.py
-├── data/
-│   ├── raw/
-│   └── processed/
-├── models/
 ├── reports/
+├── requirements.txt
 └── README.md
 ```
 
-## 🔧 Các bước xử lý dữ liệu
-
-1. **Tiền xử lý dữ liệu** (`01_preprocess.py`)
-
-   - Đọc và kiểm tra dữ liệu
-   - Xử lý các giá trị bất thường
-
-2. **Xử lý ngoại lai** (`02_outlier_processing.py`)
-
-   - Phát hiện và xử lý các giá trị ngoại lai
-   - Chuẩn hóa dữ liệu
-
-3. **Xử lý giá trị thiếu** (`03_missing_value_processing.py`)
-
-   - Phát hiện và điền giá trị thiếu
-   - Xử lý các trường hợp đặc biệt
-
-4. **Kỹ thuật đặc trưng** (`04_feature_engineering.py`)
-
-   - Tạo các đặc trưng mới
-   - Chuyển đổi dữ liệu
-
-5. **Mã hóa đặc trưng** (`05_feature_encoding.py`)
-
-   - Mã hóa các biến phân loại
-   - Chuẩn hóa các biến số
-
-6. **Chuẩn bị dữ liệu** (`06_prepare_data.py`)
-
-   - Chia tập train/test
-   - Lưu trữ dữ liệu đã xử lý
-   - Chuẩn bị dữ liệu cho training
-
-7. **Huấn luyện mô hình** (`07_train_models.py`)
-
-   - Huấn luyện nhiều mô hình khác nhau
-   - Tối ưu hóa hyperparameters
-
-8. **Đánh giá mô hình** (`08_model_evaluation.py`)
-   - Đánh giá hiệu suất mô hình
-   - Phân tích kết quả
-
 ## 📊 Kết quả
 
-- LightGBM cho kết quả tốt nhất với R2 = 0.786
-- XGBoost đứng thứ hai với R2 = 0.781
-- Random Forest đứng thứ ba với R2 = 0.769
-- Linear Regression và KNN cho kết quả thấp hơn
+- XGBoost đứng thứ hai với R2 = 0.794
+- Random Forest đứng thứ ba với R2 = 0.614, tuy nhiên có hiện tượng overfiting
+- Linear Regression chi kết quả thấp với R2 = 0.501
 
 ## 👥 Đóng góp
+Lương Phúc Quang-20215125
 
-...
+## Đôi lời nhận xét
 
-## 📝 License
+- Kết quả dự đoán chưa đạt hiệu quả như mong đợi, chủ yếu do mô hình quá tập trung vào khâu tiền xử lý và làm sạch dữ liệu thu thập từ trang Batdongsan.com.vn.
 
-Dự án này được phát triển bởi HM&KPDL Team © 2024
+- Trong khi đó, các yếu tố quan trọng như khai thác ngữ nghĩa trong dữ liệu và mở rộng tập dữ liệu từ các nguồn bổ sung (ví dụ: thông tin hạ tầng, kinh tế - xã hội, quy hoạch khu vực) lại chưa được chú trọng đầy đủ.
+
+- Việc thiếu các đặc trưng mang tính bối cảnh đã hạn chế khả năng học và giải thích của mô hình, ảnh hưởng đến chất lượng dự đoán.
+
+
+
